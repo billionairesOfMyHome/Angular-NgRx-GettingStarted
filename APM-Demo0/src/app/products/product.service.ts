@@ -14,7 +14,6 @@ import * as ProductActions from './state/product.action';
 })
 export class ProductService {
   private productsUrl = 'api/products';
-  private products: Product[];
 
   private selectedProductSource = new BehaviorSubject<Product | null>(null);
   selectedProductChanges$ = this.selectedProductSource.asObservable();
@@ -26,13 +25,9 @@ export class ProductService {
   }
 
   getProducts(): Observable<Product[]> {
-    /* if (this.products) {
-      return of(this.products);
-    } */
     return this.http.get<Product[]>(this.productsUrl)
       .pipe(
         tap(data => console.log(JSON.stringify(data))),
-        tap(data => this.store.dispatch(ProductActions.loadProducts({products:data}))),
         catchError(this.handleError)
       );
   }
@@ -55,7 +50,6 @@ export class ProductService {
     return this.http.post<Product>(this.productsUrl, newProduct, { headers })
       .pipe(
         tap(data => console.log('createProduct: ' + JSON.stringify(data))),
-        tap(data => this.store.dispatch(ProductActions.createProduct({product: data}))),
         catchError(this.handleError)
       );
   }
@@ -66,7 +60,6 @@ export class ProductService {
     return this.http.delete<Product>(url, { headers })
       .pipe(
         tap(data => console.log('deleteProduct: ' + id)),
-        tap(data => this.store.dispatch(ProductActions.deleteProduct({productId: id}))),
         catchError(this.handleError)
       );
   }
@@ -80,7 +73,7 @@ export class ProductService {
         // Update the item in the list
         // This is required because the selected product that was edited
         // was a copy of the item from the array.
-        tap(() => this.store.dispatch(ProductActions.updateProduct({product}))),
+        // tap(() => this.store.dispatch(ProductActions.updateProduct({product}))),
         // Return the product on an update
         // map(() => product),
         catchError(this.handleError)

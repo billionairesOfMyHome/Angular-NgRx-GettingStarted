@@ -1,5 +1,5 @@
-import { createAction, props } from "@ngrx/store";
-import { Product } from "../product";
+import { createAction, props } from '@ngrx/store';
+import { Product } from '../product';
 
 export const toggleShowProductCode = createAction(
   '[Product] Toggle Product Code'
@@ -7,7 +7,7 @@ export const toggleShowProductCode = createAction(
 
 export const setCurrentProduct = createAction(
   '[Product] Set Current Product',
-  (currentProduct: Product) => ({ currentProduct })
+  props<{ currentProduct: Product }>()
 );
 
 export const clearCurrentProduct = createAction(
@@ -15,13 +15,10 @@ export const clearCurrentProduct = createAction(
 );
 
 export const initializeCurrentProduct = createAction(
-  '[Product] Initialize Current Product',
+  '[Product] Initialize Current Product'
 );
 
-export const loadProducts = createAction(
-  '[Product] Load',
-  props<{ products: Product[] }>()
-);
+export const loadProducts = createAction('[Product] Load');
 
 export const loadProductsSuccess = createAction(
   '[Product] Load Success',
