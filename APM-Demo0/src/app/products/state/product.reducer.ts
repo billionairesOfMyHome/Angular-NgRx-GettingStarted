@@ -19,16 +19,16 @@ export interface State extends AppState.State {
 export interface ProductState {
   showProductCode: boolean;
   products: Product[];
-  currentProduct: Product; // why comment this out?
-  // currentProductId: number;
+  // currentProduct: Product; why comment this out? it cause two sources of truth(products and currentProduct)
+  currentProductId: number | null;
   error: string;
 }
 
 const initProductState: ProductState = {
   showProductCode: true,
   products: [],
-  currentProduct: null,
-  // currentProductId: null
+  // currentProduct: null,
+  currentProductId: null,
   error: '',
 };
 
@@ -45,30 +45,36 @@ export const getProducts = createSelector(
   (state) => state.products
 );
 
+export const getCurrentProductId = createSelector(
+  getProductFeatureState,
+  (state) => state.currentProductId
+);
+
 export const getCurrentProduct = createSelector(
   getProductFeatureState,
-  (state) => state.currentProduct
+  getCurrentProductId,
+  (state, currentProductId) => {
+    if (currentProductId === 0) {
+      return {
+        id: 0,
+        productName: '',
+        productCode: 'New',
+        description: '',
+        starRating: 0,
+      };
+    } else {
+      return state.products.find((p) => p.id === currentProductId);
+    }
+  }
 );
+/* 更高一层的封装，将 currentProductId 抽出，当 store 的结构改变时，只要较小的改动
+export const getCurrentProduct = createSelector(getProductFeatureState, 
+  (state) => state.products.find(p => p.id === state.currentProductId)); */
 
 export const getError = createSelector(
   getProductFeatureState,
   (state) => state.error
 );
-
-/* export const getCurrentProductID = createSelector(
-  getProductFeatureState,  
-  state => state.currentProductId
-);
-
-export const getCurrentProduct = createSelector(
-  getProductFeatureState,  
-  getCurrentProductID,
-  (state, currentProductId) =>  state.products.find(p => p.id === currentProductId)
-); */
-
-/* 更高一层的封装，将 currentProductId 抽出，当 store 的结构改变时，只要较小的改动
-export const getCurrentProduct = createSelector(getProductFeatureState, 
-  (state) => state.products.find(p => p.id === state.currentProductId)); */
 
 export const productReducer = createReducer<ProductState>(
   initProductState,
@@ -78,28 +84,22 @@ export const productReducer = createReducer<ProductState>(
       showProductCode: !state.showProductCode,
     };
   }),
-  on(ProductActions.setCurrentProduct, (state, action): ProductState => {
+  on(ProductActions.setCurrentProductId, (state, action): ProductState => {
     return {
       ...state,
-      currentProduct: action.currentProduct,
+      currentProductId: action.currentProductId,
     };
   }),
   on(ProductActions.clearCurrentProduct, (state): ProductState => {
     return {
       ...state,
-      currentProduct: null,
+      currentProductId: null,
     };
   }),
   on(ProductActions.initializeCurrentProduct, (state): ProductState => {
     return {
       ...state,
-      currentProduct: {
-        id: 0,
-        productName: '',
-        productCode: 'New8',
-        description: '',
-        starRating: 8,
-      },
+      currentProductId: 0,
     };
   }),
   on(ProductActions.loadProducts, (state): ProductState => {
@@ -121,28 +121,67 @@ export const productReducer = createReducer<ProductState>(
       error: action.error,
     };
   }),
-  on(ProductActions.updateProduct, (state, action): ProductState => {
+ /*  on(ProductActions.updateProduct, (state): ProductState => {
+    return {
+      ...state,
+    };
+  }), */
+  on(ProductActions.updateProductSuccess, (state, action): ProductState => {
     const updatedProducts = state.products.map((item) =>
       action.product.id === item.id ? action.product : item
     );
     return {
       ...state,
       products: updatedProducts,
-      currentProduct: action.product,
+      currentProductId: action.product.id,
+      error: '',
     };
   }),
-  on(ProductActions.createProduct, (state, action): ProductState => {
+  on(ProductActions.updateProductFailure, (state, action): ProductState => {
+    return {
+      ...state,
+      error: action.error,
+    };
+  }),
+  /* on(ProductActions.createProduct, (state, action): ProductState => {
+    return {
+      ...state,
+    };
+  }), */
+  // After a create, the currentProduct is the new product.
+  on(ProductActions.createProductSuccess, (state, action): ProductState => {
     return {
       ...state,
       products: [...state.products, action.product],
-      currentProduct: action.product,
+      currentProductId: action.product.id,
+      error: '',
     };
   }),
-  on(ProductActions.deleteProduct, (state, action): ProductState => {
+  on(ProductActions.createProductFailure, (state, action): ProductState => {
     return {
       ...state,
-      products: state.products.filter((p) => p.id !== action.productId),
-      currentProduct: null,
+      error: action.error,
+    };
+  }),
+  /* on(ProductActions.deleteProduct, (state): ProductState => {
+    return {
+      ...state,
+    };
+  }), */
+  on(ProductActions.deleteProductSuccess, (state, action): ProductState => {
+    return {
+      ...state,
+      products: state.products.filter(
+        (product) => product.id !== action.productId
+      ),
+      currentProductId: null,
+      error: '',
+    };
+  }),
+  on(ProductActions.deleteProductFailure, (state, action): ProductState => {
+    return {
+      ...state,
+      error: action.error,
     };
   })
 );

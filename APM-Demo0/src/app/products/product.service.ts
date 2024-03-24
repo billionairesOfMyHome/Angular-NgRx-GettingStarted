@@ -75,7 +75,7 @@ export class ProductService {
         // was a copy of the item from the array.
         // tap(() => this.store.dispatch(ProductActions.updateProduct({product}))),
         // Return the product on an update
-        // map(() => product),
+        map(() => product),
         catchError(this.handleError)
       );
   }
